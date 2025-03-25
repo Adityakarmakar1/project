@@ -1,6 +1,8 @@
 import tkinter as tk
 import psutil
 from tkinter import ttk
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 def start_monitoring():
     welcome_frame.pack_forget()
@@ -16,11 +18,22 @@ def update_dashboard():
     for proc in psutil.process_iter(['pid', 'name', 'cpu_percent']):
         process_list.insert("", "end", values=(proc.info['pid'], proc.info['name'], proc.info['cpu_percent']))
     
+    update_pie_chart()
     root.after(1000, update_dashboard)
+
+def update_pie_chart():
+    memory_info = psutil.virtual_memory()
+    labels = ["Used", "Available"]
+    sizes = [memory_info.used, memory_info.available]
+    colors = ["#e74c3c", "#2ecc71"]
+    ax.clear()
+    ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
+    ax.set_title("Memory Consumption")
+    canvas.draw()
 
 root = tk.Tk()
 root.title("Real-Time Process Monitoring Dashboard")
-root.geometry("600x450")
+root.geometry("700x500")
 root.configure(bg="#2c3e50")
 
 # Welcome Page
@@ -53,5 +66,10 @@ style.configure("Treeview.Heading", font=("Arial", 10, "bold"), background="#349
 style.map("Treeview", background=[("selected", "#2980b9")])
 
 process_list.pack(expand=True, fill="both", padx=5, pady=5)
+
+
+fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
+canvas = FigureCanvasTkAgg(fig, master=dashboard_frame)
+canvas.get_tk_widget().pack(pady=10)
 
 root.mainloop()
