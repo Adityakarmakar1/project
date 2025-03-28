@@ -24,7 +24,7 @@ def update_dashboard():
     
     update_pie_chart()
     update_line_graph(cpu_usage_value)
-    update_heatmap()
+    
     root.after(1000, update_dashboard)
 
 def update_pie_chart():
@@ -48,16 +48,7 @@ def update_line_graph(cpu_value):
     ax_line.legend()
     canvas_line.draw_idle()
 
-def update_heatmap():
-    core_usages = psutil.cpu_percent(percpu=True)
-    heatmap_data.append(core_usages)
-    if len(heatmap_data) > 60:
-        heatmap_data.pop(0)
-    
-    ax_heatmap.clear()
-    sns.heatmap(heatmap_data, cmap="coolwarm", cbar=True, ax=ax_heatmap, xticklabels=False, yticklabels=False)
-    ax_heatmap.set_title("CPU Core Utilization Over Time")
-    canvas_heatmap.draw_idle()
+
 
 root = tk.Tk()
 root.title("Real-Time Process Monitoring Dashboard")
@@ -110,12 +101,7 @@ fig_line, ax_line = plt.subplots(figsize=(5, 3), dpi=100)
 canvas_line = FigureCanvasTkAgg(fig_line, master=graph_frame)
 canvas_line.get_tk_widget().pack(side="right", padx=10, pady=10, fill='both', expand=True)
 
-# Heatmap for CPU Core Utilization
-heatmap_frame = tk.Frame(dashboard_frame, bg="#2c3e50")
-heatmap_frame.pack(expand=True, fill="both", padx=10, pady=10, side="bottom")
-heatmap_data = []
-fig_heatmap, ax_heatmap = plt.subplots(figsize=(6, 3), dpi=100)
-canvas_heatmap = FigureCanvasTkAgg(fig_heatmap, master=heatmap_frame)
-canvas_heatmap.get_tk_widget().pack(fill='both', expand=True)
+
+
 
 root.mainloop()
