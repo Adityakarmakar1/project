@@ -3,6 +3,7 @@ import psutil
 from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import collections
 
 def start_monitoring():
     welcome_frame.pack_forget()
@@ -10,7 +11,8 @@ def start_monitoring():
     update_dashboard()
 
 def update_dashboard():
-    cpu_usage.set(f"CPU Usage: {psutil.cpu_percent()}%")
+    cpu_usage_value = psutil.cpu_percent()
+    cpu_usage.set(f"CPU Usage: {cpu_usage_value}%")
     memory_info = psutil.virtual_memory()
     memory_usage.set(f"Memory Usage: {memory_info.percent}%")
     
@@ -19,6 +21,7 @@ def update_dashboard():
         process_list.insert("", "end", values=(proc.info['pid'], proc.info['name'], proc.info['cpu_percent']))
     
     update_pie_chart()
+    update_line_graph(cpu_usage_value)
     root.after(1000, update_dashboard)
 
 def update_pie_chart():
@@ -26,14 +29,25 @@ def update_pie_chart():
     labels = ["Used", "Available"]
     sizes = [memory_info.used, memory_info.available]
     colors = ["#e74c3c", "#2ecc71"]
-    ax.clear()
-    ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
-    ax.set_title("Memory Consumption")
-    canvas.draw()
+    ax_pie.clear()
+    ax_pie.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
+    ax_pie.set_title("Memory Consumption")
+    canvas_pie.draw_idle()
+
+def update_line_graph(cpu_value):
+    cpu_history.append(cpu_value)
+    ax_line.clear()
+    ax_line.plot(cpu_history, marker='o', linestyle='-', color='b', label="CPU Usage (%)")
+    ax_line.set_title("CPU Usage Over Time")
+    ax_line.set_xlabel("Time (seconds)")
+    ax_line.set_ylabel("CPU Usage (%)")
+    ax_line.set_ylim(0, 100)
+    ax_line.legend()
+    canvas_line.draw_idle()
 
 root = tk.Tk()
 root.title("Real-Time Process Monitoring Dashboard")
-root.geometry("700x500")
+root.geometry("900x700")
 root.configure(bg="#2c3e50")
 
 # Welcome Page
@@ -67,9 +81,15 @@ style.map("Treeview", background=[("selected", "#2980b9")])
 
 process_list.pack(expand=True, fill="both", padx=5, pady=5)
 
+# Pie Chart for Memory Consumption
+fig_pie, ax_pie = plt.subplots(figsize=(4, 4), dpi=100)
+canvas_pie = FigureCanvasTkAgg(fig_pie, master=dashboard_frame)
+canvas_pie.get_tk_widget().pack(pady=10)
 
-fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
-canvas = FigureCanvasTkAgg(fig, master=dashboard_frame)
-canvas.get_tk_widget().pack(pady=10)
+# Line Graph for CPU Usage
+cpu_history = collections.deque(maxlen=60)  # Stores last 60 seconds of CPU data
+fig_line, ax_line = plt.subplots(figsize=(5, 3), dpi=100)
+canvas_line = FigureCanvasTkAgg(fig_line, master=dashboard_frame)
+canvas_line.get_tk_widget().pack(pady=10, fill='both', expand=True)
 
 root.mainloop()
