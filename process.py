@@ -15,8 +15,8 @@ def start_monitoring():
 def update_dashboard():
     cpu_usage_value = psutil.cpu_percent()
     cpu_usage.set(f"CPU Usage: {cpu_usage_value}%")
-    memory_info = psutil.virtual_memory()
-    memory_usage.set(f"Memory Usage: {memory_info.percent}%")
+    memory_info = psutil.Process().memory_info()
+    memory_usage.set(f"Memory Usage: {memory_info.rss / (1024 * 1024):.2f} MB")
     
     process_list.delete(*process_list.get_children())
     for proc in psutil.process_iter(['pid', 'name', 'cpu_percent']):
@@ -28,9 +28,9 @@ def update_dashboard():
     root.after(1000, update_dashboard)
 
 def update_pie_chart():
-    memory_info = psutil.virtual_memory()
+    memory_info = psutil.Process().memory_info()
     labels = ["Used", "Available"]
-    sizes = [memory_info.used, memory_info.available]
+    sizes = [memory_info.rss, psutil.virtual_memory().total - memory_info.rss]
     colors = ["#e74c3c", "#2ecc71"]
     ax_pie.clear()
     ax_pie.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
