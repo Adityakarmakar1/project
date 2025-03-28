@@ -81,15 +81,19 @@ style.map("Treeview", background=[("selected", "#2980b9")])
 
 process_list.pack(expand=True, fill="both", padx=5, pady=5)
 
+# Frame for Pie Chart and Line Graph
+graph_frame = tk.Frame(dashboard_frame, bg="#2c3e50")
+graph_frame.pack(expand=True, fill="both", padx=10, pady=10, side="top")
+
 # Pie Chart for Memory Consumption
 fig_pie, ax_pie = plt.subplots(figsize=(4, 4), dpi=100)
-canvas_pie = FigureCanvasTkAgg(fig_pie, master=dashboard_frame)
-canvas_pie.get_tk_widget().pack(pady=10)
+canvas_pie = FigureCanvasTkAgg(fig_pie, master=graph_frame)
+canvas_pie.get_tk_widget().pack(side="left", padx=10, pady=10)
 
 # Line Graph for CPU Usage
 cpu_history = collections.deque(maxlen=60)  # Stores last 60 seconds of CPU data
 fig_line, ax_line = plt.subplots(figsize=(5, 3), dpi=100)
-canvas_line = FigureCanvasTkAgg(fig_line, master=dashboard_frame)
-canvas_line.get_tk_widget().pack(pady=10, fill='both', expand=True)
+canvas_line = FigureCanvasTkAgg(fig_line, master=graph_frame)
+canvas_line.get_tk_widget().pack(side="right", padx=10, pady=10, fill='both', expand=True)
 
 root.mainloop()
