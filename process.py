@@ -1,9 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import PhotoImage
 import psutil
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import collections
+import random
 
 def initialize_cpu_percent():
     for proc in psutil.process_iter():
@@ -16,11 +18,9 @@ def show_view(view_type):
     welcome_frame.pack_forget()
     dashboard_frame.pack(expand=True, fill="both")
     initialize_cpu_percent()
-
-    # Hide all sections first
     frame.pack_forget()
     graph_frame.pack_forget()
-    
+
     if view_type == "processes":
         frame.pack(fill="x", padx=15, pady=(10, 10))
     elif view_type == "graphs":
@@ -29,7 +29,9 @@ def show_view(view_type):
         frame.pack(fill="x", padx=15, pady=(5, 10))
         graph_frame.pack(expand=True, fill="both", padx=15, pady=(0, 15))
 
-    update_dashboard()
+    if not update_dashboard.running:
+        update_dashboard.running = True
+        update_dashboard()
 
 def update_dashboard():
     cpu_val = psutil.cpu_percent(interval=None)
@@ -42,6 +44,7 @@ def update_dashboard():
     update_line_graph(cpu_val)
 
     root.after(1000, update_dashboard)
+update_dashboard.running = False
 
 def update_process_list():
     process_list.delete(*process_list.get_children())
@@ -80,32 +83,79 @@ def update_line_graph(cpu_val):
     ax_line.set_ylabel("CPU %", color="white")
     canvas_line.draw_idle()
 
+def back_to_menu():
+    update_dashboard.running = False
+    dashboard_frame.pack_forget()
+    welcome_frame.pack(expand=True, fill="both")
+
 # ---------------------- GUI Setup -------------------------
 root = tk.Tk()
 root.title("Modern Task Manager")
 root.geometry("1080x750")
 root.configure(bg="#1e272e")
 
-# Welcome Frame
+# ---------------------- Welcome Frame with Animated Background ---------------------
 welcome_frame = tk.Frame(root, bg="#1e272e")
-tk.Label(welcome_frame, text="🖥️  Welcome to Your Task Manager", font=("Segoe UI", 20, "bold"),
-         fg="#f5f6fa", bg="#1e272e").pack(pady=30)
+canvas_bg = tk.Canvas(welcome_frame, bg="#1e272e", highlightthickness=0)
+canvas_bg.pack(fill="both", expand=True)
 
-tk.Button(welcome_frame, text="🔍 Show Processes", font=("Segoe UI", 14), bg="#00cec9", fg="black",
-          activebackground="#01a3a4", activeforeground="white", padx=20, pady=10, bd=0,
-          relief="flat", command=lambda: show_view("processes")).pack(pady=10)
+particles = []
+for _ in range(50):
+    x = random.randint(0, 1080)
+    y = random.randint(0, 750)
+    r = random.randint(1, 3)
+    dx = random.uniform(-0.5, 0.5)
+    dy = random.uniform(-0.5, 0.5)
+    p = canvas_bg.create_oval(x - r, y - r, x + r, y + r, fill="#7f8fa6", outline="")
+    particles.append((p, dx, dy))
 
-tk.Button(welcome_frame, text="📈 Show Graphs", font=("Segoe UI", 14), bg="#00cec9", fg="black",
-          activebackground="#01a3a4", activeforeground="white", padx=20, pady=10, bd=0,
-          relief="flat", command=lambda: show_view("graphs")).pack(pady=10)
+def animate_particles():
+    for i, (p, dx, dy) in enumerate(particles):
+        canvas_bg.move(p, dx, dy)
+        x1, y1, x2, y2 = canvas_bg.coords(p)
+        if x1 < 0 or x2 > 1080: dx = -dx
+        if y1 < 0 or y2 > 750: dy = -dy
+        particles[i] = (p, dx, dy)
+    canvas_bg.after(33, animate_particles)
+animate_particles()
 
-tk.Button(welcome_frame, text="🧩 Show Dashboard", font=("Segoe UI", 14), bg="#00cec9", fg="black",
-          activebackground="#01a3a4", activeforeground="white", padx=20, pady=10, bd=0,
-          relief="flat", command=lambda: show_view("dashboard")).pack(pady=10)
+# Welcome content container
+welcome_container = tk.Frame(canvas_bg, bg="#1e272e")
+canvas_bg.create_window(540, 360, window=welcome_container)
+
+# Image/Icon above heading (replace with your custom path or icon)
+try:
+    welcome_img = PhotoImage(file="welcome_art.png")  # Make sure the image exists
+    tk.Label(welcome_container, image=welcome_img, bg="#1e272e").pack(pady=(0, 10))
+except Exception as e:
+    tk.Label(welcome_container, text="🎨", font=("Segoe UI Emoji", 56), bg="#1e272e").pack(pady=(0, 10))
+
+# Heading
+tk.Label(welcome_container, text="Task Manager Dashboard", font=("Segoe UI", 28, "bold"),
+         fg="#f5f6fa", bg="#1e272e").pack(pady=(0, 8))
+
+tk.Label(welcome_container, text="Monitor, analyze and optimize your system in real time.",
+         font=("Segoe UI", 14), fg="#a4b0be", bg="#1e272e").pack(pady=(0, 35))
+
+# Updated button style with modern look
+def make_modern_button(text, command):
+    btn = tk.Label(welcome_container, text=text, font=("Segoe UI", 13, "bold"),
+                   bg="#48dbfb", fg="black", padx=30, pady=12, cursor="hand2",
+                   relief="raised", bd=0, width=22)
+    btn.pack(pady=10)
+    btn.bind("<Button-1>", lambda e: command())
+    btn.bind("<Enter>", lambda e: btn.config(bg="#00cec9"))
+    btn.bind("<Leave>", lambda e: btn.config(bg="#48dbfb"))
+    btn.config(highlightthickness=2, highlightbackground="#1e272e", highlightcolor="#1e272e")
+    return btn
+
+make_modern_button("🔍 Show Processes", lambda: show_view("processes"))
+make_modern_button("📈 Show Graphs", lambda: show_view("graphs"))
+make_modern_button("🧩 Show Dashboard", lambda: show_view("dashboard"))
 
 welcome_frame.pack(expand=True, fill="both")
 
-# Dashboard Frame
+# ---------------------- Dashboard Frame ---------------------
 dashboard_frame = tk.Frame(root, bg="#1e272e")
 
 cpu_usage = tk.StringVar()
@@ -117,7 +167,6 @@ tk.Label(dashboard_frame, textvariable=cpu_usage, font=("Segoe UI", 16, "bold"),
 tk.Label(dashboard_frame, textvariable=memory_usage, font=("Segoe UI", 16, "bold"),
          fg="#e17055", bg="#1e272e").pack(pady=(0, 10))
 
-# -------- Process Table --------
 frame = tk.Frame(dashboard_frame, bg="#2f3542", bd=2)
 columns = ("PID", "Process", "CPU (%)", "Memory (MB)")
 process_list = ttk.Treeview(frame, columns=columns, show="headings", height=10)
@@ -133,7 +182,6 @@ style.configure("Treeview.Heading", font=("Segoe UI", 10, "bold"), background="#
 
 process_list.pack(fill="x", padx=10, pady=10)
 
-# -------- Graphs Section --------
 graph_frame = tk.Frame(dashboard_frame, bg="#1e272e")
 fig_pie, ax_pie = plt.subplots(figsize=(4, 4), dpi=100)
 fig_pie.patch.set_facecolor('#1e272e')
@@ -147,16 +195,11 @@ fig_line.patch.set_facecolor('#1e272e')
 canvas_line = FigureCanvasTkAgg(fig_line, master=graph_frame)
 canvas_line.get_tk_widget().pack(side="right", padx=20, pady=10, fill='both', expand=True)
 
-# Exit to Menu Button
 exit_button = tk.Button(dashboard_frame, text="🚪 Exit to Menu", font=("Segoe UI", 12),
                         bg="#d63031", fg="white", padx=20, pady=10, bd=0,
                         activebackground="#c0392b", activeforeground="white",
-                        command=lambda: back_to_menu())
+                        command=back_to_menu)
 exit_button.pack(pady=(10, 20))
 
-def back_to_menu():
-    dashboard_frame.pack_forget()
-    welcome_frame.pack(expand=True, fill="both")
-
-
+# ---------------------- Main Loop -------------------------
 root.mainloop()
