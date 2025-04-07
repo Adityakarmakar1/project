@@ -128,7 +128,7 @@ try:
     welcome_img = PhotoImage(file="welcome_art.png")  # Make sure the image exists
     tk.Label(welcome_container, image=welcome_img, bg="#1e272e").pack(pady=(0, 10))
 except Exception as e:
-    tk.Label(welcome_container, text="🎨", font=("Segoe UI Emoji", 56), bg="#1e272e").pack(pady=(0, 10))
+    tk.Label(welcome_container, text="💻", font=("Segoe UI Emoji", 56), bg="#1e272e").pack(pady=(0, 10))
 
 # Heading
 tk.Label(welcome_container, text="Task Manager Dashboard", font=("Segoe UI", 28, "bold"),
