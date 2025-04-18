@@ -125,7 +125,7 @@ canvas_bg.create_window(540, 360, window=welcome_container)
 
 # Image/Icon above heading (replace with your custom path or icon)
 try:
-    welcome_img = PhotoImage(file="c")  # Make sure the image exists
+    welcome_img = PhotoImage(file="c")  # Make sure the image existsz
     tk.Label(welcome_container, image=welcome_img, bg="#1e272e").pack(pady=(0, 10))
 except Exception as e:
     tk.Label(welcome_container, text="💻", font=("Segoe UI Emoji", 56), bg="#1e272e").pack(pady=(0, 10))
